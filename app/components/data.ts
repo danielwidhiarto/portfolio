@@ -124,14 +124,14 @@ export const PROJECTS: Project[] = [
 ];
 
 export const STACK_ITEMS: StackItem[] = [
-  { icon: "⚛️", name: "Next.js / React", type: "Frontend", proficiency: 0.95 },
-  { icon: "🔴", name: "Laravel / PHP", type: "Backend", proficiency: 0.9 },
-  { icon: "🍃", name: "Spring Boot / Java", type: "Backend", proficiency: 0.85 },
-  { icon: "📱", name: "Kotlin / Android", type: "Mobile", proficiency: 0.88 },
-  { icon: "🔷", name: "TypeScript / JS", type: "Language", proficiency: 0.92 },
-  { icon: "🧠", name: "TensorFlow / ML", type: "Machine Learning", proficiency: 0.82 },
-  { icon: "🔥", name: "Firebase", type: "Cloud Services", proficiency: 0.9 },
-  { icon: "🌬️", name: "Tailwind / CSS", type: "Styling", proficiency: 0.92 },
+  { icon: "nextjs", name: "Next.js / React", type: "Frontend", proficiency: 0.95 },
+  { icon: "laravel", name: "Laravel / PHP", type: "Backend", proficiency: 0.9 },
+  { icon: "springboot", name: "Spring Boot / Java", type: "Backend", proficiency: 0.85 },
+  { icon: "kotlin", name: "Kotlin / Android", type: "Mobile", proficiency: 0.88 },
+  { icon: "typescript", name: "TypeScript / JS", type: "Language", proficiency: 0.92 },
+  { icon: "tensorflow", name: "TensorFlow / ML", type: "Machine Learning", proficiency: 0.82 },
+  { icon: "firebase", name: "Firebase", type: "Cloud Services", proficiency: 0.9 },
+  { icon: "tailwind", name: "Tailwind / CSS", type: "Styling", proficiency: 0.92 },
 ];
 
 export const EXPERIENCE_ITEMS: ExperienceItem[] = [

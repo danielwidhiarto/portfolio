@@ -3,6 +3,28 @@
 import { useEffect, useRef } from "react";
 import { STACK_ITEMS } from "./data";
 
+import { 
+  SiNextdotjs, 
+  SiLaravel, 
+  SiSpringboot, 
+  SiKotlin, 
+  SiTypescript, 
+  SiTensorflow, 
+  SiFirebase, 
+  SiTailwindcss 
+} from "react-icons/si";
+
+const ICON_MAP: Record<string, React.ReactNode> = {
+  nextjs: <SiNextdotjs />,
+  laravel: <SiLaravel />,
+  springboot: <SiSpringboot />,
+  kotlin: <SiKotlin />,
+  typescript: <SiTypescript />,
+  tensorflow: <SiTensorflow />,
+  firebase: <SiFirebase />,
+  tailwind: <SiTailwindcss />,
+};
+
 export default function Stack() {
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -39,7 +61,7 @@ export default function Stack() {
       <div className="stack-grid">
         {STACK_ITEMS.map((item, i) => (
           <div key={item.name} className={`stack-item reveal${delayClass(i)}`}>
-            <span className="stack-icon">{item.icon}</span>
+            <span className="stack-icon">{ICON_MAP[item.icon] || item.icon}</span>
             <div className="stack-name">{item.name}</div>
             <div className="stack-type">{item.type}</div>
             <div className="stack-bar">

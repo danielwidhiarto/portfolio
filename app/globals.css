@@ -1291,7 +1291,7 @@ h1.hero-title .line:nth-child(2) span {
   margin-bottom: 1.25rem;
 }
 .contact-email {
-  font-size: clamp(1.3rem, 3.5vw, 2.4rem);
+  font-size: clamp(1.1rem, 3vw, 2.1rem);
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--fg);
@@ -1299,6 +1299,8 @@ h1.hero-title .line:nth-child(2) span {
   display: block;
   margin: 1.25rem 0 2.25rem;
   transition: color 0.3s;
+  overflow-wrap: anywhere;
+  line-height: 1.1;
 }
 .contact-email:hover {
   color: var(--accent);
