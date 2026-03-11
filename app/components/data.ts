@@ -136,6 +136,12 @@ export const STACK_ITEMS: StackItem[] = [
 
 export const EXPERIENCE_ITEMS: ExperienceItem[] = [
   {
+    role: "AI Engineer Instructor",
+    place: "Coding Camp 2026 (powered by DBS Foundation)",
+    desc: "Delivering Instructor Led Training (ILT) on Python, Machine Learning, Deep Learning, NLP, and Generative AI. Mentoring university students on practical AI applications and workforce readiness.",
+    period: "Jan 2026 — Now",
+  },
+  {
     role: "Lecturer Specialist S1",
     place: "Bina Nusantara University",
     desc: "Teaching and mentoring students in the School of Computer Science.",
