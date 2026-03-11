@@ -33,9 +33,14 @@ export default function Contact() {
           interesting conversations. If you&apos;re working on something worth
           doing — reach out.
         </p>
-        <a className="contact-email" href="mailto:yourname@university.ac.id">
-          yourname@university.ac.id
-        </a>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "2rem" }}>
+          <a className="contact-email" href="mailto:emmanuel.widhiarto@binus.ac.id">
+            emmanuel.widhiarto@binus.ac.id
+          </a>
+          <a className="contact-email" href="mailto:danielwidhiarto@gmail.com" style={{ opacity: 0.8, fontSize: "0.9em" }}>
+            danielwidhiarto@gmail.com
+          </a>
+        </div>
         <div className="social-links">
           {SOCIAL_LINKS.map((link) => (
             <a key={link.label} className="social-link" href={link.href}>

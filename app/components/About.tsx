@@ -30,21 +30,22 @@ export default function About() {
       <div className="about-inner">
         <div className="about-text reveal">
           <p>
-            I&apos;m <strong>YourName</strong>, a Lecturer Specialist at{" "}
-            <strong>Bina Nusantara University</strong> and an active researcher in{" "}
-            <span className="hl">[your field]</span>. My work sits at the
-            intersection of academic rigor and real-world engineering I
-            believe good science should ship.
+            I&apos;m <strong>Emmanuel Daniel Widhiarto</strong>, a Lecturer Specialist at{" "}
+            <strong>Bina Nusantara University</strong> and a researcher focused on{" "}
+            <span className="hl">Artificial Intelligence</span>,{" "}
+            <span className="hl">NLP</span>, and{" "}
+            <span className="hl">Software Engineering</span>. My work bridges the gap
+            between theoretical research and practical software implementation.
           </p>
           <blockquote>
             &quot;Teaching is how I learn twice. Building is how I verify what I
             teach.&quot;
           </blockquote>
           <p>
-            Before academia, I spent years in industry as a full-stack
-            developer. That experience shapes how I teach — always grounded,
-            always practical, always asking{" "}
-            <em>&quot;but does it actually work?&quot;</em>
+            Before becoming a lecturer, I spent years as a Laboratory Assistant
+            and mentor, teaching over 200 students in various programming 
+            disciplines — from Web and Mobile development to Deep Learning 
+            at Bangkit Academy.
           </p>
           <p>
             Currently open to{" "}
