@@ -5,9 +5,10 @@ import { useTheme } from "@/app/context/ThemeContext";
 import MobileMenu from "./MobileMenu";
 
 const NAV_LINKS = [
+  { href: "#about", section: "about", label: "About" },
+  { href: "#education", section: "education", label: "Education" },
   { href: "#publications", section: "publications", label: "Publications" },
   { href: "#projects", section: "projects", label: "Projects" },
-  { href: "#about", section: "about", label: "About" },
   { href: "#stack", section: "stack", label: "Stack" },
   { href: "#contact", section: "contact", label: "Contact" },
 ];
@@ -38,7 +39,8 @@ export default function Navbar() {
   return (
     <>
       <nav id="navbar" className={scrolled ? "scrolled" : ""}>
-        <div className="nav-logo">YN · PhD</div>
+        {/* <div className="nav-logo">PhD</div> */}
+        <div className="nav-logo">ED</div>
         <div className="nav-right">
           <ul className="nav-links">
             {NAV_LINKS.map((link) => (

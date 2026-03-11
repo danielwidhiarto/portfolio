@@ -40,6 +40,15 @@ export interface ExperienceItem {
   period: string;
 }
 
+export interface EducationItem {
+  degree: string;
+  major: string;
+  institution: string;
+  location: string;
+  year: string;
+  desc?: string;
+}
+
 export const PUBLICATIONS: Publication[] = [
   {
     year: 2024,
@@ -180,6 +189,33 @@ export const RESEARCH_AREAS = [
   "HCI",
   "Web Technologies",
   "Your Area",
+];
+
+export const EDUCATION_ITEMS: EducationItem[] = [
+  {
+    degree: "Doctor of Philosophy (Ph.D.)",
+    major: "Computer Science",
+    institution: "Universitas XYZ",
+    location: "Jakarta, Indonesia",
+    year: "2020 — 2024",
+    desc: "Dissertation focused on [your topic]. Research in [field]. Supervised by Prof. [Name].",
+  },
+  {
+    degree: "Master of Science (M.Sc.)",
+    major: "Informatics Engineering",
+    institution: "Institut Teknologi ABC",
+    location: "Bandung, Indonesia",
+    year: "2017 — 2019",
+    desc: "Thesis on [topic]. GPA 3.9/4.0. Teaching assistant for Algorithm & Data Structures.",
+  },
+  {
+    degree: "Bachelor of Science (B.Sc.)",
+    major: "Computer Science",
+    institution: "Universitas DEF",
+    location: "Surabaya, Indonesia",
+    year: "2013 — 2017",
+    desc: "Graduated with honors. Final project on [topic]. Active in student research club.",
+  },
 ];
 
 export const SOCIAL_LINKS = [

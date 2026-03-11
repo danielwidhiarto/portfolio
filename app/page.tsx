@@ -9,6 +9,7 @@ import Hero from "./components/Hero";
 import Publications from "./components/Publications";
 import Projects from "./components/Projects";
 import About from "./components/About";
+import Education from "./components/Education";
 import Stack from "./components/Stack";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
@@ -28,9 +29,10 @@ export default function Home() {
       <div className="grid-overlay" />
       <Navbar />
       <Hero />
+      <About />
+      <Education />
       <Publications />
       <Projects />
-      <About />
       <Stack />
       <Contact />
       <Footer />

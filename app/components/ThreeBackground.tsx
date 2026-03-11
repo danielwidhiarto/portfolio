@@ -97,7 +97,7 @@ export default function ThreeBackground() {
     scene.add(mobius);
 
     const wMat = new THREE.MeshBasicMaterial({
-      color: 0xf59e0b,
+      color: 0x2dd4bf,
       wireframe: true,
       transparent: true,
       opacity: 0.1,
@@ -118,7 +118,7 @@ export default function ThreeBackground() {
     const pGeo = new THREE.BufferGeometry();
     pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
     const pMat = new THREE.PointsMaterial({
-      color: 0xf59e0b,
+      color: 0x2dd4bf,
       size: 0.022,
       transparent: true,
       opacity: 0.3,
@@ -143,7 +143,7 @@ export default function ThreeBackground() {
     const floaters: THREE.Mesh[] = [];
     floatersData.forEach(([geo, x, y, z, spd]) => {
       const m = new THREE.MeshBasicMaterial({
-        color: 0xf59e0b,
+        color: 0x2dd4bf,
         wireframe: true,
         transparent: true,
         opacity: 0.16,
@@ -157,10 +157,10 @@ export default function ThreeBackground() {
 
     // Lights
     scene.add(new THREE.AmbientLight(0xffffff, 0.2));
-    const pl1 = new THREE.PointLight(0xf59e0b, 3.5, 14);
+    const pl1 = new THREE.PointLight(0x2dd4bf, 3.5, 14);
     pl1.position.set(5, 3, 3);
     scene.add(pl1);
-    const pl2 = new THREE.PointLight(0xfbbf24, 2, 14);
+    const pl2 = new THREE.PointLight(0x5eead4, 2, 14);
     pl2.position.set(-5, -3, 2);
     scene.add(pl2);
 
@@ -169,8 +169,8 @@ export default function ThreeBackground() {
     }
 
     function updateSceneTheme(isLight: boolean) {
-      const a = isLight ? 0x1d4ed8 : 0xf59e0b;
-      const a2 = isLight ? 0x3b82f6 : 0xfbbf24;
+      const a = isLight ? 0x1d4ed8 : 0x2dd4bf;
+      const a2 = isLight ? 0x3b82f6 : 0x5eead4;
       wMat.color.setHex(a);
       pMat.color.setHex(a);
       pl1.color.setHex(a);
