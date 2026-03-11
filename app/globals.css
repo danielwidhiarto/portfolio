@@ -141,7 +141,7 @@ body::before {
 }
 .loader-bar-wrap {
   width: 200px;
-  height: 8px;
+  height: 1px;
   background: rgba(255, 255, 255, 0.15);
   position: relative;
   overflow: hidden;

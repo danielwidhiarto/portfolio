@@ -29,7 +29,7 @@ export default function Loader() {
         requestAnimationFrame(tick);
       } else {
         if (pctRef.current) pctRef.current.textContent = "100%";
-        setTimeout(() => loaderRef.current?.classList.add("hidden"), 450);
+        setTimeout(() => loaderRef.current?.classList.add("hidden"), 900);
       }
     }
 
