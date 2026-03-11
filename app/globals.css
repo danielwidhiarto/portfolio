@@ -141,8 +141,8 @@ body::before {
 }
 .loader-bar-wrap {
   width: 200px;
-  height: 1px;
-  background: var(--border-solid);
+  height: 8px;
+  background: rgba(255, 255, 255, 0.15);
   position: relative;
   overflow: hidden;
   margin-top: 0.5rem;
@@ -153,12 +153,11 @@ body::before {
   position: absolute;
   top: 0;
   left: 0;
+  width: 0%;
   height: 100%;
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent-glow);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 4.2s cubic-bezier(0.1, 0, 0.2, 1);
+  background: #ffffff;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+  animation: loaderFill 3s linear 1.4s forwards;
 }
 .loader-pct {
   font-family: "DM Mono", monospace;
@@ -1461,10 +1460,10 @@ footer {
 }
 @keyframes loaderFill {
   from {
-    transform: scaleX(0);
+    width: 0%;
   }
   to {
-    transform: scaleX(1);
+    width: 100%;
   }
 }
 @keyframes scrollPulse {

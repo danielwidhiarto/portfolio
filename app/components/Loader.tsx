@@ -23,14 +23,12 @@ export default function Loader() {
       const eased = Math.min(stallEase(raw), 1);
       const pctNum = Math.floor(eased * 100);
 
-      if (fillRef.current) fillRef.current.style.transform = `scaleX(${eased})`;
       if (pctRef.current) pctRef.current.textContent = pctNum + "%";
 
       if (raw < 1) {
         requestAnimationFrame(tick);
       } else {
         if (pctRef.current) pctRef.current.textContent = "100%";
-        if (fillRef.current) fillRef.current.style.transform = "scaleX(1)";
         setTimeout(() => loaderRef.current?.classList.add("hidden"), 450);
       }
     }
@@ -40,10 +38,10 @@ export default function Loader() {
 
   return (
     <div id="loader" ref={loaderRef}>
-      <div className="loader-eyebrow">Portfolio · 2025</div>
-      <div className="loader-name">
-        Your<span>Name</span>
-      </div>
+      <div className="loader-eyebrow">Portfolio · 2026</div>
+      {/* <div className="loader-name">
+        Emmanuel Daniel Widhiarto<span>S.Kom</span>
+      </div> */}
       <div className="loader-role">
         Lecturer · Researcher · Full-Stack Developer
       </div>

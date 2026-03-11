@@ -31,17 +31,17 @@ export default function Hero() {
       {/* Bottom: role left · description right */}
       <div className="hero-bottom">
         <p className="hero-role">
-          <strong>Specialist Lecturer S1</strong>
+          <strong>Lecturer Specialist S1</strong>
           <br />
-          Faculty of Computer Science
+          School of Computer Science
           <br />
           <span style={{ fontSize: ".8em", opacity: 0.7 }}>
-            Universitas XYZ
+            Bina Nusantara University
           </span>
         </p>
         <p className="hero-sub">
           I research, teach, and build. My work lives at the intersection of
-          academic rigor and real-world engineering — ideas that publish{" "}
+          academic rigor and real-world engineering ideas that publish{" "}
           <em>and</em> ship.
         </p>
       </div>

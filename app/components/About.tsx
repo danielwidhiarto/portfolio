@@ -30,10 +30,10 @@ export default function About() {
       <div className="about-inner">
         <div className="about-text reveal">
           <p>
-            I&apos;m <strong>YourName</strong>, a Specialist Lecturer at{" "}
-            <strong>Universitas XYZ</strong> and an active researcher in{" "}
+            I&apos;m <strong>YourName</strong>, a Lecturer Specialist at{" "}
+            <strong>Bina Nusantara University</strong> and an active researcher in{" "}
             <span className="hl">[your field]</span>. My work sits at the
-            intersection of academic rigor and real-world engineering — I
+            intersection of academic rigor and real-world engineering I
             believe good science should ship.
           </p>
           <blockquote>
