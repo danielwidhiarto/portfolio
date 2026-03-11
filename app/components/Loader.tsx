@@ -8,7 +8,7 @@ export default function Loader() {
   const loaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const LOAD_DURATION = 5000;
+    const LOAD_DURATION = 3000;
     const loadStart = performance.now();
 
     function stallEase(t: number): number {
