@@ -187,6 +187,6 @@ export const SOCIAL_LINKS = [
   { label: "LinkedIn", href: "https://www.linkedin.com/in/danielwidhiarto/" },
   { label: "GitHub", href: "https://github.com/danielwidhiarto" },
   { label: "Google Scholar", href: "https://scholar.google.com/citations?user=cYXRFecAAAAJ&hl=en" },
-  { label: "ResearchGate", href: "#" },
-  { label: "ORCID", href: "" },
+  { label: "ResearchGate", href: "https://edanielwidhiarto.vercel.app/#contact" },
+  { label: "ORCID", href: "https://edanielwidhiarto.vercel.app/#contact" },
 ];
