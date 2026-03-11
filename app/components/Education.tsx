@@ -7,7 +7,8 @@ export default function Education() {
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const items = sectionRef.current?.querySelectorAll(".edu-item") ?? [];
+    const items =
+      sectionRef.current?.querySelectorAll(".reveal, .edu-item") ?? [];
     const io = new IntersectionObserver(
       (entries) =>
         entries.forEach((e) => {

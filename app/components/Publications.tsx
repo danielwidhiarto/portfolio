@@ -35,7 +35,8 @@ export default function Publications() {
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const items = sectionRef.current?.querySelectorAll(".pub-item") ?? [];
+    const items =
+      sectionRef.current?.querySelectorAll(".reveal, .pub-item") ?? [];
     const io = new IntersectionObserver(
       (entries) =>
         entries.forEach((e) => {
