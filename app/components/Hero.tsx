@@ -60,16 +60,16 @@ export default function Hero() {
 
       <div className="hero-stats">
         <div>
-          <div className="stat-num">8+</div>
-          <div className="stat-label">Papers Published</div>
+          <div className="stat-num">1+</div>
+          <div className="stat-label">Paper Published</div>
         </div>
         <div>
-          <div className="stat-num">3yr</div>
-          <div className="stat-label">Research</div>
+          <div className="stat-num">4yr</div>
+          <div className="stat-label">Research Experience</div>
         </div>
         <div>
-          <div className="stat-num">20+</div>
-          <div className="stat-label">Projects Shipped</div>
+          <div className="stat-num">10+</div>
+          <div className="stat-label">Projects Built</div>
         </div>
         <div>
           <div className="stat-num">∞</div>

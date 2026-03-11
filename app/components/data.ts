@@ -51,15 +51,14 @@ export interface EducationItem {
 
 export const PUBLICATIONS: Publication[] = [
   {
-    year: 2024,
+    year: 2025,
     type: "conf",
     title:
       "Comparative Analysis of Technical Indicators’ Effect on Forecasting Models for LQ45 Stock Prices",
-    authorsHtml: "<strong>Emmanuel Daniel Widhiarto</strong>, et al.",
-    venue: "TBD / Conference Proceedings",
+    authorsHtml: "D. K. J. F. Wahyudi, <strong>E. D. Widhiarto</strong>, F. N. Lingga, and A. Chowanda",
+    venue: "2025 International Conference on Applied Artificial Intelligence, Data Engineering and Sciences (ICAIDES), Jakarta, Indonesia, pp. 1-6",
     links: [
       { label: "DOI ↗", href: "https://ieeexplore.ieee.org/document/11404059" },
-      // { label: "PDF ↗", href: "https://ieeexplore.ieee.org/document/11404059" },
     ],
   },
 ];
@@ -139,7 +138,7 @@ export const EXPERIENCE_ITEMS: ExperienceItem[] = [
   {
     role: "Lecturer Specialist S1",
     place: "Bina Nusantara University",
-    desc: "Teaching and mentoring students in the School of Computer Science. Active research in AI and Software Engineering.",
+    desc: "Teaching and mentoring students in the School of Computer Science.",
     period: "Sep 2025 — Now",
   },
   {
@@ -153,6 +152,12 @@ export const EXPERIENCE_ITEMS: ExperienceItem[] = [
     place: "Bangkit Academy (Google, GoTo, Traveloka)",
     desc: "Developed 'Lingu', a Hanzi writing recognition app using Kotlin and TFLite with 90% accuracy. Applied CNN/ANN for predictive modeling.",
     period: "Feb 2024 — Jul 2024",
+  },
+  {
+    role: "Laboratory Assistant (Part-time)",
+    place: "Bina Nusantara University",
+    desc: "Provided instructional support in Algorithms (C) and Programming (Java). Guided students in web development and database management.",
+    period: "Feb 2022 — Feb 2023",
   },
 ];
 

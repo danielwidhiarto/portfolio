@@ -3,9 +3,9 @@ import "./globals.css";
 import { ThemeProvider } from "./context/ThemeContext";
 
 export const metadata: Metadata = {
-  title: "YourName — Lecturer & Developer",
+  title: "Emmanuel Daniel Widhiarto — Lecturer & Developer",
   description:
-    "Portfolio of YourName — Specialist Lecturer, Researcher & Full-Stack Developer",
+    "Portfolio of Emmanuel Daniel Widhiarto — Specialist Lecturer, Researcher & Software Engineer at BINUS University.",
 };
 
 export default function RootLayout({

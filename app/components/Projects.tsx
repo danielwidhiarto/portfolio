@@ -25,7 +25,7 @@ function ProjectCard({ project, delay }: { project: Project; delay?: number }) {
     <div className={revealClass} ref={cardRef}>
       {project.featured ? (
         <>
-          <div>
+          <div className="proj-info-side">
             <div className="proj-top">
               <span className="proj-num">{project.num}</span>
               <span className="proj-arrow">↗</span>
@@ -43,7 +43,13 @@ function ProjectCard({ project, delay }: { project: Project; delay?: number }) {
               ))}
             </div>
           </div>
-          <div className="featured-visual">{project.visual}</div>
+          <div className="featured-visual">
+            <img 
+              src="/ProjectImage.jpg" 
+              alt={project.name} 
+              style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} 
+            />
+          </div>
         </>
       ) : (
         <>
@@ -51,6 +57,7 @@ function ProjectCard({ project, delay }: { project: Project; delay?: number }) {
             <span className="proj-num">{project.num}</span>
             <span className="proj-arrow">↗</span>
           </div>
+          <div className="proj-visual-small">{project.visual}</div>
           <div className="proj-name">{project.name}</div>
           <p className="proj-desc">{project.desc}</p>
           <div className="proj-tags">
