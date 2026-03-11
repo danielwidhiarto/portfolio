@@ -14,7 +14,7 @@ export default function Hero() {
 
       {/* Name block — degrees sandwiching the name */}
       <div className="hero-name-block">
-        <div className="hero-degree-above">Prof. Dr.</div>
+        {/* <div className="hero-degree-above">Prof. Dr.</div> */}
         <h1 className="hero-title">
           <span className="line">
             <span>Emmanuel Daniel</span>
@@ -23,7 +23,7 @@ export default function Hero() {
             <span>Widhiarto</span>
           </span>
         </h1>
-        <div className="hero-degree-below">S.Kom., M.Kom.</div>
+        <div className="hero-degree-below">S.Kom.</div>
       </div>
 
       <div className="hero-divider" />
