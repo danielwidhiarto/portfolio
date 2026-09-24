@@ -291,9 +291,6 @@ export default function PortfolioExperience() {
               </span>
             </div>
             <p className="map-help" id="project-map-instructions">
-              <span className="map-help-desktop">
-                Hover to reveal · Hold left or right and drag to rotate
-              </span>
               <span className="map-help-mobile">
                 Tap a project · Drag to rotate
               </span>

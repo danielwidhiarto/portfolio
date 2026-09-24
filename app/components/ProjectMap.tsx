@@ -30,6 +30,11 @@ const PROJECT_POSITIONS: [number, number, number][] = [
   [1.15, -1.05, 1.1],
 ];
 
+const AUTO_ROTATION_SPEEDS = {
+  horizontal: 0.36,
+  vertical: 0.12,
+};
+
 const COVER_PALETTES = [
   { background: "#e7ebe4", line: "#bac5b7", shape: "#9dad98" },
   { background: "#ece9e2", line: "#c9c1b5", shape: "#c0b29e" },
@@ -268,9 +273,6 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
     resizeObserver.observe(canvas);
     resize();
 
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
     const clock = new THREE.Clock();
     let animationFrame = 0;
     rotationYRef.current = 0.12;
@@ -282,12 +284,11 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
       const elapsed = clock.elapsedTime;
 
       if (!isDraggingRef.current) {
-        if (!reducedMotion) {
-          rotationYRef.current +=
-            delta * (pointerActiveRef.current ? 0.045 : 0.09);
-        }
+        const hoverSpeedMultiplier = pointerActiveRef.current ? 0.5 : 1;
+        rotationYRef.current +=
+          delta * AUTO_ROTATION_SPEEDS.horizontal * hoverSpeedMultiplier;
         rotationXRef.current +=
-          (Math.sin(elapsed * 0.28) * 0.035 - rotationXRef.current) * 0.04;
+          delta * AUTO_ROTATION_SPEEDS.vertical * hoverSpeedMultiplier;
       }
       group.rotation.y = rotationYRef.current;
       group.rotation.x = rotationXRef.current;
@@ -363,11 +364,7 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
         hoveredEntryRef.current = null;
         setHoveredProject(null);
         rotationYRef.current += deltaX * 0.008;
-        rotationXRef.current = THREE.MathUtils.clamp(
-          rotationXRef.current + deltaY * 0.006,
-          -0.75,
-          0.75,
-        );
+        rotationXRef.current += deltaY * 0.006;
       }
       dragPositionRef.current = { x: event.clientX, y: event.clientY };
       event.preventDefault();
