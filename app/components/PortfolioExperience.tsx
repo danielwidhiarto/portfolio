@@ -1,7 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import ProjectMap from "./ProjectMap";
 import {
   EDUCATION_ITEMS,
@@ -16,7 +21,7 @@ import {
 
 const NAV_ITEMS = [
   { id: "home", label: "Index" },
-  { id: "work", label: "Selected work" },
+  { id: "work", label: "Projects" },
   { id: "about", label: "About" },
   { id: "experience", label: "Experience" },
   { id: "research", label: "Research" },
@@ -84,52 +89,11 @@ function ProjectArtwork({
   );
 }
 
-function ProjectCard({
-  project,
-  index,
-  onSelect,
-}: {
-  project: Project;
-  index: number;
-  onSelect: (project: Project) => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={`project-card${project.featured ? " featured" : ""}`}
-      aria-label={`Open ${project.name} project details`}
-      onClick={() => onSelect(project)}
-    >
-      <div className="project-card-content">
-        <div className="project-card-topline">
-          <span className="project-number">{project.num}</span>
-          <span className="project-card-arrow" aria-hidden="true">
-            ↗
-          </span>
-        </div>
-        <h3 className="project-card-title">{project.name}</h3>
-        <p className="project-card-description">{project.desc}</p>
-        <div className="project-tags">
-          {project.tags.map((tag) => (
-            <span
-              key={tag.label}
-              className={`project-tag${tag.accent ? " accent" : ""}`}
-            >
-              {tag.label}
-            </span>
-          ))}
-        </div>
-      </div>
-      <ProjectArtwork project={project} index={index} />
-    </button>
-  );
-}
-
 export default function PortfolioExperience() {
   const [activeSection, setActiveSection] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const dialogRef = useRef<HTMLElement>(null);
+  const navigationScrollFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     let animationFrame = 0;
@@ -148,30 +112,51 @@ export default function PortfolioExperience() {
       });
     };
 
+    const cancelNavigationScroll = () => {
+      if (navigationScrollFrameRef.current === null) return;
+      window.cancelAnimationFrame(navigationScrollFrameRef.current);
+      navigationScrollFrameRef.current = null;
+    };
+    const cancelNavigationScrollForKey = (event: KeyboardEvent) => {
+      if (
+        ["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(
+          event.key,
+        )
+      ) {
+        cancelNavigationScroll();
+      }
+    };
+
     updateActiveSection();
     window.addEventListener("scroll", updateActiveSection, { passive: true });
     window.addEventListener("resize", updateActiveSection);
+    window.addEventListener("wheel", cancelNavigationScroll, { passive: true });
+    window.addEventListener("touchstart", cancelNavigationScroll, {
+      passive: true,
+    });
+    window.addEventListener("pointerdown", cancelNavigationScroll);
+    window.addEventListener("keydown", cancelNavigationScrollForKey);
     return () => {
       window.cancelAnimationFrame(animationFrame);
+      cancelNavigationScroll();
       window.removeEventListener("scroll", updateActiveSection);
       window.removeEventListener("resize", updateActiveSection);
+      window.removeEventListener("wheel", cancelNavigationScroll);
+      window.removeEventListener("touchstart", cancelNavigationScroll);
+      window.removeEventListener("pointerdown", cancelNavigationScroll);
+      window.removeEventListener("keydown", cancelNavigationScrollForKey);
     };
   }, []);
 
   useEffect(() => {
-    if (!menuOpen && !selectedProject) return;
+    if (!menuOpen) return;
 
     const previousOverflow = document.body.style.overflow;
     const previouslyFocused = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
 
-    if (selectedProject) dialogRef.current?.focus();
-
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-        setSelectedProject(null);
-      }
+      if (event.key === "Escape") setMenuOpen(false);
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -180,9 +165,100 @@ export default function PortfolioExperience() {
       window.removeEventListener("keydown", handleKeyDown);
       previouslyFocused?.focus();
     };
-  }, [menuOpen, selectedProject]);
+  }, [menuOpen]);
 
-  const handleNavigation = () => setMenuOpen(false);
+  const handleNavigation = (event: ReactMouseEvent<HTMLAnchorElement>) => {
+    setMenuOpen(false);
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    const hash = event.currentTarget.hash;
+    const target = document.getElementById(hash.slice(1));
+    if (!target) return;
+
+    event.preventDefault();
+    if (window.location.hash !== hash) {
+      window.history.pushState(null, "", hash);
+    }
+
+    const scrollToTarget = () => {
+      if (navigationScrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(navigationScrollFrameRef.current);
+        navigationScrollFrameRef.current = null;
+      }
+
+      const scrollPaddingTop =
+        Number.parseFloat(
+          window.getComputedStyle(document.documentElement).scrollPaddingTop,
+        ) || 0;
+      const scrollMarginTop =
+        Number.parseFloat(window.getComputedStyle(target).scrollMarginTop) || 0;
+      const targetTop =
+        target.getBoundingClientRect().top +
+        window.scrollY -
+        scrollPaddingTop -
+        scrollMarginTop;
+      const maximumScroll = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight,
+      );
+      const destination = Math.min(
+        maximumScroll,
+        Math.max(0, targetTop),
+      );
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        window.scrollTo({ top: destination, behavior: "instant" });
+        return;
+      }
+
+      const start = window.scrollY;
+      const distance = destination - start;
+      if (Math.abs(distance) < 1) return;
+
+      const duration = Math.min(1200, Math.max(500, Math.abs(distance) * 0.55));
+      const startedAt = performance.now();
+      const animate = (time: number) => {
+        const progress = Math.min((time - startedAt) / duration, 1);
+        const easedProgress =
+          progress < 0.5
+            ? 4 * progress ** 3
+            : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        window.scrollTo({
+          top: start + distance * easedProgress,
+          behavior: "instant",
+        });
+
+        if (progress < 1) {
+          navigationScrollFrameRef.current =
+            window.requestAnimationFrame(animate);
+        } else {
+          navigationScrollFrameRef.current = null;
+        }
+      };
+
+      navigationScrollFrameRef.current = window.requestAnimationFrame(animate);
+    };
+
+    if (menuOpen) {
+      window.requestAnimationFrame(() =>
+        window.requestAnimationFrame(scrollToTarget),
+      );
+    } else {
+      scrollToTarget();
+    }
+  };
+  const selectedProjectIndex = selectedProject
+    ? PROJECTS.findIndex((project) => project.num === selectedProject.num) + 1
+    : 0;
 
   return (
     <div className="site-shell">
@@ -283,13 +359,8 @@ export default function PortfolioExperience() {
             </div>
           </div>
 
-          <div className="map-heading">
-            <div className="map-heading-left">
-              <p className="map-section-kicker">Selected work</p>
-              <span className="map-project-count">
-                {String(PROJECTS.length).padStart(2, "0")} projects
-              </span>
-            </div>
+          <div className="map-heading" id="work">
+            <p className="map-section-kicker">Projects</p>
             <p className="map-help" id="project-map-instructions">
               <span className="map-help-mobile">
                 Tap a project · Drag to rotate
@@ -297,41 +368,62 @@ export default function PortfolioExperience() {
             </p>
           </div>
 
-          <ProjectMap projects={PROJECTS} onSelect={setSelectedProject} />
-
-          <div className="home-footnote">
-            <span>Scroll to explore</span>
-            <a href="#work">View the project index ↓</a>
-          </div>
-        </section>
-
-        <section className="page-section" id="work">
-          <SectionHeading
-            index="01"
-            eyebrow="Selected work"
-            title="Projects"
-            summary="A selection of systems, research prototypes, and software built for real communities."
+          <ProjectMap
+            projects={PROJECTS}
+            selectedProject={selectedProject}
+            onSelect={setSelectedProject}
           />
-          <div className="projects-intro">
-            <p>
-              Select a project to see its focus and the tools behind it. The
-              first project includes a product preview.
-            </p>
-            <span className="section-meta">
-              {String(PROJECTS.length).padStart(2, "0")} entries
-            </span>
-          </div>
-          <div className="project-grid">
-            {PROJECTS.map((project, index) => (
-              <ProjectCard
-                key={project.num}
-                project={project}
-                index={index}
-                onSelect={setSelectedProject}
-              />
-            ))}
-          </div>
         </section>
+
+        {selectedProject && (
+          <section
+            className="page-section project-detail-section"
+            id="project-details"
+            aria-labelledby="project-detail-title"
+          >
+            <ProjectArtwork
+              project={selectedProject}
+              index={selectedProjectIndex - 1}
+              className="project-detail-artwork"
+            />
+            <div className="project-detail-content">
+              <div className="project-detail-kicker">
+                <p className="section-eyebrow">
+                  Project · {String(selectedProjectIndex).padStart(2, "0")}
+                </p>
+                <a
+                  className="project-detail-back text-link"
+                  href="#work"
+                  onClick={() => setSelectedProject(null)}
+                >
+                  Back to projects <span aria-hidden="true">↗</span>
+                </a>
+              </div>
+              <h2 className="project-detail-title" id="project-detail-title">
+                {selectedProject.name}
+              </h2>
+              <p className="project-detail-description">
+                {selectedProject.desc}
+              </p>
+              <div className="project-detail-tools">
+                <span className="project-detail-label">Built with</span>
+                <div className="project-tags project-detail-tags">
+                  {selectedProject.tags.map((tag) => (
+                    <span
+                      key={tag.label}
+                      className={`project-tag${tag.accent ? " accent" : ""}`}
+                    >
+                      {tag.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <a className="text-link project-detail-contact" href="#contact">
+                Discuss this project <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </section>
+        )}
 
         <section className="page-section" id="about">
           <SectionHeading
@@ -575,78 +667,6 @@ export default function PortfolioExperience() {
         </footer>
       </main>
 
-      {selectedProject && (
-        <div
-          className="modal-layer"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setSelectedProject(null);
-            }
-          }}
-        >
-          <section
-            className="project-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="project-modal-title"
-            tabIndex={-1}
-            ref={dialogRef}
-          >
-            <div className="modal-header">
-              <div>
-                <p className="section-eyebrow">
-                  Project ·{" "}
-                  {String(
-                    PROJECTS.findIndex(
-                      (project) => project.num === selectedProject.num,
-                    ) + 1,
-                  ).padStart(2, "0")}
-                </p>
-                <h2 className="modal-heading" id="project-modal-title">
-                  {selectedProject.name}
-                </h2>
-              </div>
-              <button
-                type="button"
-                className="modal-close"
-                aria-label="Close project details"
-                onClick={() => setSelectedProject(null)}
-              >
-                ×
-              </button>
-            </div>
-            <ProjectArtwork
-              project={selectedProject}
-              index={PROJECTS.indexOf(selectedProject)}
-              className="modal-artwork"
-            />
-            <p className="modal-description">{selectedProject.desc}</p>
-            <div className="project-tags modal-tags">
-              {selectedProject.tags.map((tag) => (
-                <span
-                  key={tag.label}
-                  className={`project-tag${tag.accent ? " accent" : ""}`}
-                >
-                  {tag.label}
-                </span>
-              ))}
-            </div>
-            <div className="modal-footer">
-              <span className="modal-footer-note">
-                More context available on request.
-              </span>
-              <a
-                className="text-link"
-                href="#contact"
-                onClick={() => setSelectedProject(null)}
-              >
-                Discuss a project <span aria-hidden="true">↗</span>
-              </a>
-            </div>
-          </section>
-        </div>
-      )}
     </div>
   );
 }

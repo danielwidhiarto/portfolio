@@ -8,10 +8,14 @@ import {
   type PointerEvent,
 } from "react";
 import * as THREE from "three";
+import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
+import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
 import type { Project } from "./data";
 
 interface ProjectMapProps {
   projects: Project[];
+  selectedProject: Project | null;
   onSelect: (project: Project) => void;
 }
 
@@ -22,18 +26,40 @@ interface ProjectEntry {
   phase: number;
 }
 
+interface ViewTransition {
+  elapsed: number;
+  duration: number;
+  fromCameraPosition: THREE.Vector3;
+  toCameraPosition: THREE.Vector3;
+  fromCameraTarget: THREE.Vector3;
+  toCameraTarget: THREE.Vector3;
+  fromRotationX: number;
+  toRotationX: number;
+  fromRotationY: number;
+  toRotationY: number;
+}
+
+const PROJECT_CARD_WIDTH = 1.62;
+const PROJECT_CARD_HEIGHT = 0.75;
+const PROJECT_CARD_DEPTH = 0.24;
+const PROJECT_COVER_WIDTH = 432;
+const PROJECT_COVER_HEIGHT = 200;
+
 const PROJECT_POSITIONS: [number, number, number][] = [
   [-1.35, 0.45, 0.15],
   [0.15, -0.7, 0.95],
   [1.35, 0.4, -0.55],
   [-0.45, 1.4, -1.05],
-  [1.15, -1.05, 1.1],
+  [2.05, -1.05, 1.4],
 ];
 
 const AUTO_ROTATION_SPEEDS = {
   horizontal: 0.36,
   vertical: 0.12,
 };
+
+const PROJECT_FOCUS_DISTANCE = 2.25;
+const MOBILE_PROJECT_FOCUS_DISTANCE = 1.8;
 
 const COVER_PALETTES = [
   { background: "#e7ebe4", line: "#bac5b7", shape: "#9dad98" },
@@ -45,8 +71,8 @@ const COVER_PALETTES = [
 
 function createCoverTexture(project: Project, index: number) {
   const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 256;
+  canvas.width = PROJECT_COVER_WIDTH;
+  canvas.height = PROJECT_COVER_HEIGHT;
 
   const context = canvas.getContext("2d");
   if (!context) {
@@ -59,50 +85,66 @@ function createCoverTexture(project: Project, index: number) {
 
   context.strokeStyle = palette.line;
   context.lineWidth = 1;
-  for (let position = 0; position <= 256; position += 32) {
+  for (let position = 0; position <= canvas.width; position += 36) {
     context.beginPath();
     context.moveTo(position, 0);
-    context.lineTo(position, 256);
+    context.lineTo(position, canvas.height);
     context.stroke();
+  }
+  for (let position = 0; position <= canvas.height; position += 30) {
     context.beginPath();
     context.moveTo(0, position);
-    context.lineTo(256, position);
+    context.lineTo(canvas.width, position);
     context.stroke();
   }
 
   context.save();
-  context.translate(132, 128);
+  context.translate(canvas.width * 0.58, canvas.height / 2);
   context.rotate(-0.28 + (index % 3) * 0.12);
   context.fillStyle = palette.shape;
-  context.fillRect(-34, -88, 76, 160);
+  context.fillRect(-50, -72, 104, 144);
   context.fillStyle = "rgba(255, 255, 255, 0.58)";
-  context.fillRect(6, -62, 54, 116);
+  context.fillRect(5, -48, 66, 104);
   context.strokeStyle = "rgba(36, 37, 32, 0.35)";
-  context.strokeRect(-34, -88, 94, 160);
+  context.strokeRect(-50, -72, 128, 144);
   context.restore();
 
   context.fillStyle = "#34362f";
-  context.font = '500 30px "DM Mono", monospace';
-  context.fillText(project.num.slice(0, 2), 18, 42);
-  context.font = '500 12px "DM Sans", Arial, sans-serif';
-  context.fillText(project.name.slice(0, 24), 18, 232);
+  context.font = '500 26px "DM Mono", monospace';
+  context.fillText(project.num.slice(0, 2), 18, 36);
+  context.font = '500 14px "DM Sans", Arial, sans-serif';
+  context.fillText(project.name.slice(0, 24), 18, canvas.height - 15);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
 }
 
-function createEdge(geometry: THREE.BufferGeometry, opacity = 0.85) {
+function createEdge(
+  geometry: THREE.BufferGeometry,
+  opacity = 0.95,
+  linewidth = 1.8,
+) {
   const edges = new THREE.EdgesGeometry(geometry);
-  const material = new THREE.LineBasicMaterial({
-    color: "#c6c8bf",
+  const lineGeometry = new LineSegmentsGeometry().fromEdgesGeometry(edges);
+  edges.dispose();
+
+  const material = new LineMaterial({
+    alphaToCoverage: true,
+    color: "#9ca397",
     transparent: true,
     opacity,
+    linewidth,
   });
-  return new THREE.LineSegments(edges, material);
+
+  return new LineSegments2(lineGeometry, material);
 }
 
-export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
+export default function ProjectMap({
+  projects,
+  selectedProject,
+  onSelect,
+}: ProjectMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mapShellRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -114,6 +156,13 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
   const rotationYRef = useRef(0.12);
   const rotationXRef = useRef(0);
   const hoveredEntryRef = useRef<ProjectEntry | null>(null);
+  const focusedEntryRef = useRef<ProjectEntry | null>(null);
+  const focusedViewRef = useRef(false);
+  const cameraTargetRef = useRef(new THREE.Vector3());
+  const viewTransitionRef = useRef<ViewTransition | null>(null);
+  const focusProjectRef = useRef<((project: Project) => void) | null>(null);
+  const resetViewRef = useRef<(() => void) | null>(null);
+  const previousSelectedProjectRef = useRef(selectedProject);
   const pickProjectRef = useRef<((x: number, y: number) => Project | null) | null>(
     null,
   );
@@ -139,7 +188,10 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
     }
 
     mapShell.classList.remove("webgl-unavailable");
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    focusedViewRef.current = false;
+    focusedEntryRef.current = null;
+    viewTransitionRef.current = null;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
@@ -170,8 +222,11 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
     const raycaster = new THREE.Raycaster();
 
     projects.forEach((project, index) => {
-      const geometry = new THREE.BoxGeometry(0.92, 0.92, 0.92);
-      const displayFace = [4, 0, 2][index % 3];
+      const geometry = new THREE.BoxGeometry(
+        PROJECT_CARD_WIDTH,
+        PROJECT_CARD_HEIGHT,
+        PROJECT_CARD_DEPTH,
+      );
       const texture =
         project.featured && index === 0
           ? new THREE.TextureLoader().load("/ProjectImage.jpg")
@@ -181,7 +236,7 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
       const materials: THREE.Material[] = Array.from(
         { length: 6 },
         (_, face) =>
-          face === displayFace
+          face === 4 || face === 5
             ? new THREE.MeshBasicMaterial({ map: texture })
             : new THREE.MeshStandardMaterial({
                 color: "#fdfdfa",
@@ -233,7 +288,7 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(x, y, z);
-      mesh.add(createEdge(geometry, 0.52));
+      mesh.add(createEdge(geometry, 0.52, 1.2));
       group.add(mesh);
     });
 
@@ -253,18 +308,152 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
     };
     pickProjectRef.current = pickProject;
 
+    const getOverviewCameraPosition = (width: number) =>
+      new THREE.Vector3(
+        width < 560 ? 4.2 : 4.9,
+        width < 560 ? 4.6 : 4.2,
+        width < 560 ? 7.7 : 7.2,
+      );
+
+    const getProjectFocusDistance = (width: number, height: number) => {
+      const isMobile = width < 560;
+      const verticalHalfFov = THREE.MathUtils.degToRad((isMobile ? 48 : 43) / 2);
+      const horizontalHalfFov = Math.atan(
+        Math.tan(verticalHalfFov) * (Math.max(width, 1) / Math.max(height, 1)),
+      );
+      const focusScale = 1.06;
+      const focusPadding = 1.2;
+      const widthDistance =
+        (PROJECT_CARD_WIDTH * group.scale.x * focusScale * focusPadding) /
+        (2 * Math.tan(horizontalHalfFov));
+      const heightDistance =
+        (PROJECT_CARD_HEIGHT * group.scale.y * focusScale * focusPadding) /
+        (2 * Math.tan(verticalHalfFov));
+
+      return Math.max(
+        isMobile ? MOBILE_PROJECT_FOCUS_DISTANCE : PROJECT_FOCUS_DISTANCE,
+        widthDistance,
+        heightDistance,
+      );
+    };
+
+    const getNearestAngle = (current: number, target: number) =>
+      current + Math.atan2(Math.sin(target - current), Math.cos(target - current));
+
+    const startViewTransition = (
+      cameraPosition: THREE.Vector3,
+      cameraTarget: THREE.Vector3,
+      rotationX: number,
+      rotationY: number,
+    ) => {
+      const targetRotationX = getNearestAngle(rotationXRef.current, rotationX);
+      const targetRotationY = getNearestAngle(rotationYRef.current, rotationY);
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        camera.position.copy(cameraPosition);
+        cameraTargetRef.current.copy(cameraTarget);
+        rotationXRef.current = targetRotationX;
+        rotationYRef.current = targetRotationY;
+        group.rotation.set(targetRotationX, targetRotationY, 0);
+        camera.lookAt(cameraTargetRef.current);
+        viewTransitionRef.current = null;
+        return;
+      }
+
+      viewTransitionRef.current = {
+        elapsed: 0,
+        duration: 1.6,
+        fromCameraPosition: camera.position.clone(),
+        toCameraPosition: cameraPosition,
+        fromCameraTarget: cameraTargetRef.current.clone(),
+        toCameraTarget: cameraTarget,
+        fromRotationX: rotationXRef.current,
+        toRotationX: targetRotationX,
+        fromRotationY: rotationYRef.current,
+        toRotationY: targetRotationY,
+      };
+    };
+
+    const focusProject = (project: Project) => {
+      const entry = projectEntries.find(
+        (projectEntry) => projectEntry.project.num === project.num,
+      );
+      if (!entry) return;
+
+      focusedViewRef.current = true;
+      focusedEntryRef.current = entry;
+      hoveredEntryRef.current = null;
+      pointerActiveRef.current = false;
+      setHoveredProject(null);
+
+      const target = new THREE.Vector3(
+        entry.mesh.position.x,
+        entry.baseY,
+        entry.mesh.position.z,
+      ).multiplyScalar(group.scale.x);
+      const cameraPosition = target
+        .clone()
+        .add(
+          new THREE.Vector3(
+            0,
+            0,
+            getProjectFocusDistance(canvas.clientWidth, canvas.clientHeight),
+          ),
+        );
+      startViewTransition(cameraPosition, target, 0, 0);
+    };
+
+    const resetView = () => {
+      focusedViewRef.current = false;
+      focusedEntryRef.current = null;
+      hoveredEntryRef.current = null;
+      pointerActiveRef.current = false;
+      setHoveredProject(null);
+      startViewTransition(
+        getOverviewCameraPosition(Math.max(canvas.clientWidth, 1)),
+        new THREE.Vector3(),
+        0,
+        0.12,
+      );
+    };
+
+    focusProjectRef.current = focusProject;
+    resetViewRef.current = resetView;
+
     const resize = () => {
       const width = Math.max(canvas.clientWidth, 1);
       const height = Math.max(canvas.clientHeight, 1);
       camera.aspect = width / height;
       camera.fov = width < 560 ? 48 : 43;
-      camera.position.set(
-        width < 560 ? 4.2 : 4.9,
-        width < 560 ? 4.6 : 4.2,
-        width < 560 ? 7.7 : 7.2,
-      );
       group.scale.setScalar(width < 560 ? 1.08 : 1.28);
-      camera.lookAt(0, 0, 0);
+      if (focusedViewRef.current && focusedEntryRef.current) {
+        const entry = focusedEntryRef.current;
+        const target = new THREE.Vector3(
+          entry.mesh.position.x,
+          entry.baseY,
+          entry.mesh.position.z,
+        ).multiplyScalar(group.scale.x);
+        const cameraPosition = target
+          .clone()
+          .add(
+            new THREE.Vector3(
+              0,
+              0,
+              getProjectFocusDistance(width, height),
+            ),
+          );
+        const transition = viewTransitionRef.current;
+        if (transition) {
+          transition.toCameraPosition.copy(cameraPosition);
+          transition.toCameraTarget.copy(target);
+        } else {
+          camera.position.copy(cameraPosition);
+          cameraTargetRef.current.copy(target);
+        }
+      } else if (!viewTransitionRef.current) {
+        camera.position.copy(getOverviewCameraPosition(width));
+        cameraTargetRef.current.set(0, 0, 0);
+      }
+      camera.lookAt(cameraTargetRef.current);
       camera.updateProjectionMatrix();
       renderer.setSize(width, height, false);
     };
@@ -283,7 +472,43 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
       const delta = clock.getDelta();
       const elapsed = clock.elapsedTime;
 
-      if (!isDraggingRef.current) {
+      const transition = viewTransitionRef.current;
+      if (transition) {
+        transition.elapsed = Math.min(
+          transition.elapsed + delta,
+          transition.duration,
+        );
+        const progress = transition.elapsed / transition.duration;
+        const easedProgress = progress * progress * (3 - 2 * progress);
+        camera.position.lerpVectors(
+          transition.fromCameraPosition,
+          transition.toCameraPosition,
+          easedProgress,
+        );
+        cameraTargetRef.current.lerpVectors(
+          transition.fromCameraTarget,
+          transition.toCameraTarget,
+          easedProgress,
+        );
+        rotationXRef.current = THREE.MathUtils.lerp(
+          transition.fromRotationX,
+          transition.toRotationX,
+          easedProgress,
+        );
+        rotationYRef.current = THREE.MathUtils.lerp(
+          transition.fromRotationY,
+          transition.toRotationY,
+          easedProgress,
+        );
+
+        if (progress >= 1) {
+          camera.position.copy(transition.toCameraPosition);
+          cameraTargetRef.current.copy(transition.toCameraTarget);
+          rotationXRef.current = transition.toRotationX;
+          rotationYRef.current = transition.toRotationY;
+          viewTransitionRef.current = null;
+        }
+      } else if (!focusedViewRef.current && !isDraggingRef.current) {
         const hoverSpeedMultiplier = pointerActiveRef.current ? 0.5 : 1;
         rotationYRef.current +=
           delta * AUTO_ROTATION_SPEEDS.horizontal * hoverSpeedMultiplier;
@@ -292,8 +517,13 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
       }
       group.rotation.y = rotationYRef.current;
       group.rotation.x = rotationXRef.current;
+      camera.lookAt(cameraTargetRef.current);
 
-      if (pointerActiveRef.current && !isDraggingRef.current) {
+      if (
+        !focusedViewRef.current &&
+        pointerActiveRef.current &&
+        !isDraggingRef.current
+      ) {
         mouse.set(pointerRef.current.x, pointerRef.current.y);
         raycaster.setFromCamera(mouse, camera);
         const hit = raycaster.intersectObjects(
@@ -308,15 +538,21 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
       }
 
       projectEntries.forEach((entry) => {
-        const targetScale = entry === hoveredEntryRef.current ? 1.1 : 1;
+        const targetScale = focusedEntryRef.current
+          ? entry === focusedEntryRef.current
+            ? 1.06
+            : 1
+          : entry === hoveredEntryRef.current
+            ? 1.1
+            : 1;
         entry.mesh.scale.setScalar(
           entry.mesh.scale.x + (targetScale - entry.mesh.scale.x) * 0.12,
         );
         entry.mesh.position.y =
-          entry.baseY +
-          (entry === hoveredEntryRef.current
-            ? 0
-            : Math.sin(elapsed * 0.72 + entry.phase) * 0.045);
+          entry === focusedEntryRef.current ||
+          entry === hoveredEntryRef.current
+            ? entry.baseY
+            : entry.baseY + Math.sin(elapsed * 0.72 + entry.phase) * 0.045;
       });
 
       renderer.render(scene, camera);
@@ -328,6 +564,11 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
       window.cancelAnimationFrame(animationFrame);
       resizeObserver.disconnect();
       pickProjectRef.current = null;
+      focusProjectRef.current = null;
+      resetViewRef.current = null;
+      focusedEntryRef.current = null;
+      focusedViewRef.current = false;
+      viewTransitionRef.current = null;
       mapShell.classList.remove("webgl-unavailable");
       scene.traverse((object) => {
         if (!(object instanceof THREE.Mesh || object instanceof THREE.LineSegments)) {
@@ -349,7 +590,19 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
       });
       renderer.dispose();
     };
-  }, [onSelect, projects]);
+  }, [projects]);
+
+  useEffect(() => {
+    if (previousSelectedProjectRef.current?.num === selectedProject?.num) return;
+    const previousProject = previousSelectedProjectRef.current;
+    previousSelectedProjectRef.current = selectedProject;
+    if (previousProject && !selectedProject) resetViewRef.current?.();
+  }, [selectedProject]);
+
+  const handleProjectSelect = (project: Project) => {
+    focusProjectRef.current?.(project);
+    onSelect(project);
+  };
 
   const handlePointerMove = (event: PointerEvent<HTMLCanvasElement>) => {
     const canvas = event.currentTarget;
@@ -387,6 +640,7 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
 
   const handlePointerDown = (event: PointerEvent<HTMLCanvasElement>) => {
     if (event.button !== 0 && event.button !== 2) return;
+    if (focusedViewRef.current) return;
 
     event.preventDefault();
     isDraggingRef.current = true;
@@ -434,16 +688,19 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
     const project =
       hoveredEntryRef.current?.project ??
       pickProjectRef.current?.(event.clientX, event.clientY);
-    if (project) onSelect(project);
+    if (project) handleProjectSelect(project);
   };
 
   return (
     <div className="project-map-wrap">
-      <div className="project-map-shell" ref={mapShellRef}>
+      <div
+        className={`project-map-shell${selectedProject ? " project-focused" : ""}`}
+        ref={mapShellRef}
+      >
         <canvas
           ref={canvasRef}
           className="project-map-canvas"
-          aria-label="Interactive 3D map of selected software projects"
+          aria-label="Interactive 3D map of projects"
           aria-describedby="project-map-help"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -462,37 +719,48 @@ export default function ProjectMap({ projects, onSelect }: ProjectMapProps) {
             <>
               <span className="map-tooltip-number">{hoveredProject.num}</span>
               <span className="map-tooltip-title">{hoveredProject.name}</span>
-              <span className="map-tooltip-action">Select to explore ↗</span>
+              <span className="map-tooltip-action">Click to zoom in ↗</span>
             </>
           )}
         </div>
-        <div className="map-fallback" role="status">
-          The 3D preview is unavailable in this browser. The complete project
-          index is available below.
-        </div>
+          {selectedProject && (
+            <div className="project-focus-caption" aria-live="polite">
+              <span className="project-focus-number">
+                {String(
+                  projects.findIndex(
+                    (project) => project.num === selectedProject.num,
+                  ) + 1,
+                ).padStart(2, "0")}
+              </span>
+              <h2 className="project-focus-title">{selectedProject.name}</h2>
+            </div>
+          )}
+          <div className="map-fallback" role="status">
+            The 3D preview is unavailable in this browser. Select a numbered
+            project below to view its details.
+          </div>
       </div>
       <div
-        className="map-project-index"
+        className="map-project-index sr-only"
         role="group"
-        aria-label="Open a project"
+        aria-label="Project selection"
       >
-        <span className="map-index-label">Open project</span>
         {projects.map((project, index) => (
           <button
             key={project.num}
             type="button"
             className="map-index-button"
             aria-label={`Open ${project.name}`}
-            onClick={() => onSelect(project)}
+            onClick={() => handleProjectSelect(project)}
           >
             {String(index + 1).padStart(2, "0")}
           </button>
         ))}
       </div>
       <span className="sr-only" id="project-map-help">
-        Move over a project cube to reveal its name. Hold and drag with either
-        mouse button to rotate the project map. Select a cube or use the project
-        buttons to open its details.
+        Move over a project card to reveal its name. Hold and drag with either
+        mouse button to rotate the project map. Select a card to view its
+        details below, or tab to the project choices.
       </span>
     </div>
   );
